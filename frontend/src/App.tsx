@@ -1,10 +1,10 @@
 import { useState } from 'react'
 
 interface Book {
-  id: number;
-  title: string;
-  author: string;
-  description: string;
+  id?: number;
+  title?: string;
+  author?: string;
+  description?: string;
 }
 
 const TEST_DATA: Book[] = [
@@ -18,7 +18,14 @@ const TEST_DATA: Book[] = [
 
 function App() {
   const [books, setBooks] = useState<Book[]>(TEST_DATA);
-  const [activeBook, setActiveBook] = useState<Book | null>(null);
+  const [activeBook, setActiveBook] = useState<Book>();
+
+  const handleBookFieldChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
+    setActiveBook((prevState) => ({
+      ...prevState,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
   return (
     <div className='flex flex-col items-center'>
@@ -35,16 +42,20 @@ function App() {
             </div>
           ))}
         </div>
-        <div className='basis-1 p-12'>
-          <form>
-            <label htmlFor="title" className='block'>Title</label>
-            <input className="border-2" id="title" name="title" type="text" placeholder='Title of the book' value={activeBook?.title}></input>
-
-            <label htmlFor="author" className='block'>Author</label>
-            <input className="border-2" id="author" name="author" type="text" placeholder='Author of the book' value={activeBook?.author}></input>
-
-            <label htmlFor="description" className='block'>Description</label>
-            <textarea className="border-2" id="description" rows={4} cols={50} name="description" value={activeBook?.description} placeholder='Description of the book'></textarea>
+        <div className='p-12 grow'>
+          <form className='flex flex-col gap-3'>
+            <div className='flex'>
+              <label htmlFor="title" className='pr-4 font-bold w-1/6'>Title</label>
+              <input className="border-2 p-1 rounded-lg" id="title" name="title" type="text" placeholder='Title of the book' value={activeBook?.title} onChange={handleBookFieldChange}></input>
+            </div>
+            <div className='flex'>
+              <label htmlFor="author" className='pr-4 font-bold w-1/6'>Author</label>
+              <input className="grow border-2 p-1 rounded-lg" id="author" name="author" type="text" placeholder='Author of the book' value={activeBook?.author} onChange={handleBookFieldChange}></input>
+            </div>
+            <div className='flex'>
+              <label htmlFor="description" className='pr-4 font-bold w-1/6'>Description</label>
+              <textarea className="border-2 grow rounded-lg p-1" rows={15} id="description" name="description" placeholder='Description of the book' value={activeBook?.description} onChange={handleBookFieldChange}></textarea>
+            </div>
           </form>
         </div>
       </div>

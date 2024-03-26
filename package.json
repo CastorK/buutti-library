@@ -1,0 +1,16 @@
+{
+  "name": "buutti-library",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clientdev": "cd frontend && npm run dev",
+    "serverdev": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run serverdev\" \"npm run clientdev\""
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

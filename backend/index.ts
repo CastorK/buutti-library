@@ -78,9 +78,15 @@ app.get<{id: number}, Book>('/books/:id', async (req, res) => {
 /********
  * POST *
  ********/
-app.post<BookData, Book>('/books', async (req, res) => {
+app.post<BookData, Book | {error: string}>('/books', async (req, res) => {
   const bookData: BookData = req.body;
   const bookCollection = await db.getObject<BookCollection>("/books");
+
+  const isDuplicate: boolean = Object.values(bookCollection).some(book => book.title == bookData.title && book.author == bookData.author);
+  if (isDuplicate) {
+    res.status(400).json({error: "Duplicate book with same title and author exists!"});
+    return;
+  }
   const newId = generateUniqueID(Object.keys(bookCollection).map(stringID => Number(stringID)));
   const newBook = { [newId]: { id: newId, ...bookData } };
   await db.push('/books', newBook, false);

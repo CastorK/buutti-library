@@ -1,23 +1,28 @@
+import { JsonDB, Config } from 'node-json-db';
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 require('dotenv').config();
 
-interface DefaultResponse {
-  message: string;
-}
-
 interface Book {
-  id: number,
+  id: number;
   title: string,
   author: string,
   description: string,
 }
 
-interface Data {
-  books: Book[]
+interface BookCollection {
+  [key: string]: Book
 }
 
+interface Data {
+  books: BookCollection
+}
+
+interface RootResponse {
+  tables: string[];
+}
 
 
 const port = process.env.PORT || 5000;
@@ -27,25 +32,22 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 
-app.get<{}, DefaultResponse>('/', (req, res) => {
+const db = new JsonDB(new Config("libraryDataBase"));
+
+app.get<{}, RootResponse>('/', async (req, res) => {
+  const data = await db.getObject<Data>("/");
   res.status(200).json({
-    message: 'Default response',
+    tables: Object.keys(data)
   });
 });
-app.get<{}, DefaultResponse>('/book', (req, res) => {
-  res.status(200).json({
-    message: 'All books go here',
-  });
+app.get<{}, BookCollection>('/books', async (req, res) => {
+  const data = await db.getObject<{ [key: string]: Book }>("/books")
+  res.status(200).json(data);
 });
-app.get<{id: number}, DefaultResponse>('/book/:id', (req, res) => {
+app.get<{id: number}, Book>('/books/:id', async (req, res) => {
   const { id } = req.params;
-  res.status(200).json({
-    message: `Find book with id ${id} and return it`,
-  });
-});
-
-app.post('/book/:id', (req, res) => {
-
+  const data = await db.getObject<Book>(`/books/${id}`);
+  res.status(200).json(data);
 });
 
 app.listen(port, () => {

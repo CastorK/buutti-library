@@ -27,6 +27,17 @@ function App() {
     }));
   };
 
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!(event.nativeEvent instanceof SubmitEvent)) return;
+    switch (event.nativeEvent.submitter?.id) {
+      case 'saveNew': console.log('Save new book!'); return;
+      case 'save': console.log('Modify current book!'); return;
+      case 'delete': console.log('Delete current book!'); return;
+      default: return;
+    }
+  }
+
   return (
     <div className='flex flex-col items-center'>
       <h1 className='text-5xl font-bold pt-20 pb-14'>Welcome to Castor's library!</h1>
@@ -43,7 +54,7 @@ function App() {
           ))}
         </div>
         <div className='p-12 grow'>
-          <form className='flex flex-col gap-3'>
+          <form className='flex flex-col gap-3' onSubmit={handleSubmit}>
             <div className='flex'>
               <label htmlFor="title" className='pr-4 font-bold w-1/6'>Title</label>
               <input className="border-2 p-1 rounded-lg" id="title" name="title" type="text" placeholder='Title of the book' value={activeBook.title} onChange={handleBookFieldChange}></input>
@@ -57,9 +68,9 @@ function App() {
               <textarea className="border-2 grow rounded-lg p-1" rows={15} id="description" name="description" placeholder='Description of the book' value={activeBook.description} onChange={handleBookFieldChange}></textarea>
             </div>
             <div className='flex gap-4 justify-center pt-8'>
-              <button className='bg-blue-700 py-2 px-4 rounded-lg border-2 border-blue-800 text-white enabled:hover:bg-blue-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0}>Save New</button>
-              <button className='bg-green-700 py-2 px-4 rounded-lg border-2 border-green-800 text-white enabled:hover:bg-green-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0}>Save</button>
-              <button className='bg-red-700 py-2 px-4 rounded-lg border-2 border-red-800 text-white enabled:hover:bg-red-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0}>Delete</button>
+              <button type='submit' id="saveNew" className='bg-blue-700 py-2 px-4 rounded-lg border-2 border-blue-800 text-white enabled:hover:bg-blue-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0}>Save New</button>
+              <button type='submit' id="save" className='bg-green-700 py-2 px-4 rounded-lg border-2 border-green-800 text-white enabled:hover:bg-green-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0}>Save</button>
+              <button type='submit' id="delete" className='bg-red-700 py-2 px-4 rounded-lg border-2 border-red-800 text-white enabled:hover:bg-red-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0}>Delete</button>
             </div>
           </form>
         </div>

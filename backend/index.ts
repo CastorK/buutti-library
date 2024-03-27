@@ -5,11 +5,20 @@ import cors from 'cors';
 import helmet from 'helmet';
 require('dotenv').config();
 
+const MAX_ID = 1000000;
+const PORT = process.env.PORT || 5000;
+
+interface BookData {
+  title: string;
+  author: string;
+  description: string;
+}
+
 interface Book {
   id: number;
-  title: string,
-  author: string,
-  description: string,
+  title: string;
+  author: string;
+  description: string;
 }
 
 interface BookCollection {
@@ -24,32 +33,61 @@ interface RootResponse {
   tables: string[];
 }
 
+function getRandomInt(max: number) {
+  return Math.floor(Math.random() * max);
+}
 
-const port = process.env.PORT || 5000;
+function generateUniqueID(existingIDs: number[]): string {
+  while (true) {
+    const candidateID = getRandomInt(MAX_ID);
+    if (!(candidateID in existingIDs)) {
+      return String(candidateID);
+    }
+  }
+}
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded());
 app.use(cors());
 app.use(helmet());
 
-const db = new JsonDB(new Config("libraryDataBase"));
+const db = new JsonDB(new Config("libraryDataBase", true, true));
 
+/*******
+ * GET *
+ *******/
 app.get<{}, RootResponse>('/', async (req, res) => {
   const data = await db.getObject<Data>("/");
   res.status(200).json({
     tables: Object.keys(data)
   });
 });
+
 app.get<{}, BookCollection>('/books', async (req, res) => {
   const data = await db.getObject<{ [key: string]: Book }>("/books")
   res.status(200).json(data);
 });
+
 app.get<{id: number}, Book>('/books/:id', async (req, res) => {
   const { id } = req.params;
   const data = await db.getObject<Book>(`/books/${id}`);
   res.status(200).json(data);
 });
 
-app.listen(port, () => {
-  console.log(`Backend started on localhost:${port}`);
+/********
+ * POST *
+ ********/
+app.post<BookData, Book>('/books', async (req, res) => {
+  const bookData: BookData = req.body;
+  const bookCollection = await db.getObject<BookCollection>("/books");
+  const newId = generateUniqueID(Object.keys(bookCollection).map(stringID => Number(stringID)));
+  const newBook = { [newId]: { id: newId, ...bookData } };
+  await db.push('/books', newBook, false);
+  const insertedBook = await db.getObject<Book>(`/books/${newId}`);
+  res.status(200).json(insertedBook);
+});
+
+app.listen(PORT, () => {
+  console.log(`Backend started on localhost:${PORT}`);
 });

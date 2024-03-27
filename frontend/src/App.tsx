@@ -1,10 +1,10 @@
 import { useState } from 'react'
 
 interface Book {
-  id?: number;
-  title?: string;
-  author?: string;
-  description?: string;
+  id: number;
+  title: string;
+  author: string;
+  description: string;
 }
 
 const TEST_DATA: Book[] = [
@@ -18,7 +18,7 @@ const TEST_DATA: Book[] = [
 
 function App() {
   const [books, setBooks] = useState<Book[]>(TEST_DATA);
-  const [activeBook, setActiveBook] = useState<Book>();
+  const [activeBook, setActiveBook] = useState<Book>({id: -1, title: '', author: '', description: ''});
 
   const handleBookFieldChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
     setActiveBook((prevState) => ({
@@ -46,15 +46,15 @@ function App() {
           <form className='flex flex-col gap-3'>
             <div className='flex'>
               <label htmlFor="title" className='pr-4 font-bold w-1/6'>Title</label>
-              <input className="border-2 p-1 rounded-lg" id="title" name="title" type="text" placeholder='Title of the book' value={activeBook?.title} onChange={handleBookFieldChange}></input>
+              <input className="border-2 p-1 rounded-lg" id="title" name="title" type="text" placeholder='Title of the book' value={activeBook.title} onChange={handleBookFieldChange}></input>
             </div>
             <div className='flex'>
               <label htmlFor="author" className='pr-4 font-bold w-1/6'>Author</label>
-              <input className="grow border-2 p-1 rounded-lg" id="author" name="author" type="text" placeholder='Author of the book' value={activeBook?.author} onChange={handleBookFieldChange}></input>
+              <input className="grow border-2 p-1 rounded-lg" id="author" name="author" type="text" placeholder='Author of the book' value={activeBook.author} onChange={handleBookFieldChange}></input>
             </div>
             <div className='flex'>
               <label htmlFor="description" className='pr-4 font-bold w-1/6'>Description</label>
-              <textarea className="border-2 grow rounded-lg p-1" rows={15} id="description" name="description" placeholder='Description of the book' value={activeBook?.description} onChange={handleBookFieldChange}></textarea>
+              <textarea className="border-2 grow rounded-lg p-1" rows={15} id="description" name="description" placeholder='Description of the book' value={activeBook.description} onChange={handleBookFieldChange}></textarea>
             </div>
           </form>
         </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface Book {
   id: number;
@@ -7,18 +7,32 @@ interface Book {
   description: string;
 }
 
-const TEST_DATA: Book[] = [
-  {id:1, title: "The first book", author: "A. Stoneman", description: "I'm the first book ever made!"},
-  {id:2, title: "2nd edition", author: "B. Bronzeman", description: "Ironically, the second book written by BRONZEman"},
-  {id:3, title: "Third time is a charm", author: "O. Ironman", description: "TOO DOO TOO DOO DOO TODODODODO DOO DOO DO DO"},
-  {id:4, title: "Fantastic Four", author: "Mr. Fantastic", description: "Four is a good number"},
-  {id:5, title: "Mumbo no 5", author: "Lou Bega", description: "A little bit of many women"},
-  {id:6, title: "666", author: "The Devil", description: "A very long description. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."},
-]
-
 function App() {
-  const [books, setBooks] = useState<Book[]>(TEST_DATA);
+  const [books, setBooks] = useState<Book[]>([]);
   const [activeBook, setActiveBook] = useState<Book>({id: -1, title: '', author: '', description: ''});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const res = await fetch("/api/books");
+        if (!res.ok) {
+          throw new Error(`Error ${res.status}`);
+        }
+        const booksData: { [key:string] : Book } = await res.json();
+        setBooks(Object.values(booksData));
+      } catch (err) {
+        console.log(`ERROR: ${err}`);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBooks();
+  }, [])
 
   const handleBookFieldChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
     setActiveBook((prevState) => ({

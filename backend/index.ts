@@ -8,6 +8,14 @@ require('dotenv').config();
 const MAX_ID = 1000000;
 const PORT = process.env.PORT || 5000;
 
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded());
+app.use(cors());
+app.use(helmet());
+
+const db = new JsonDB(new Config("libraryDataBase", true, true));
+
 interface BookData {
   title: string;
   author: string;
@@ -45,14 +53,6 @@ function generateUniqueID(existingIDs: number[]): string {
     }
   }
 }
-
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded());
-app.use(cors());
-app.use(helmet());
-
-const db = new JsonDB(new Config("libraryDataBase", true, true));
 
 /*******
  * GET *

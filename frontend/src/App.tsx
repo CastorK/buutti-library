@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Spinner from './Spinner';
 
 interface Book {
   id: number;
@@ -10,24 +11,24 @@ interface Book {
 function App() {
   const [books, setBooks] = useState<Book[]>([]);
   const [activeBook, setActiveBook] = useState<Book>({id: -1, title: '', author: '', description: ''});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     const fetchBooks = async () => {
       try {
         const res = await fetch("/api/books");
         if (!res.ok) {
-          throw new Error(`Error ${res.status}`);
+          throw new Error(`(${res.status}) ${res.statusText}`);
         }
         const booksData: { [key:string] : Book } = await res.json();
         setBooks(Object.values(booksData));
       } catch (err) {
-        console.log(`ERROR: ${err}`);
-        setError(true);
+        setIsError(true);
+        setErrorMsg(String(err));
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     }
 
@@ -54,8 +55,14 @@ function App() {
 
   return (
     <div className='flex flex-col items-center'>
-      <h1 className='text-5xl font-bold pt-20 pb-14'>Welcome to Castor's library!</h1>
-      <div className='flex w-[80vw] border-2 rounded-lg'>
+      <h1 className='text-5xl font-bold pt-20 pb-7'>Welcome to Castor's library!</h1>
+      <div className={`absolute top-1/2 ${isLoading ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
+        <Spinner />
+      </div>
+      <div className="w-[50vw] py-2 bg-red-600 rounded-lg text-center font-bold text-2xl" hidden={!isError}>
+        {errorMsg}
+      </div>
+      <div className={`flex w-[80vw] mt-7 border-2 rounded-lg transition-opacity duration-300 delay-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
         <div className='min-w-[30vw] basis-1 border-r-2 p-2'>
           {books.map(book => (
             <div key={book.id} className="flex flex-col border-b-2 hover:bg-gray-100 cursor-pointer" onClick={() => setActiveBook(book)}>

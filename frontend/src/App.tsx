@@ -50,7 +50,7 @@ function App() {
     if (!(event.nativeEvent instanceof SubmitEvent)) return;
     switch (event.nativeEvent.submitter?.id) {
       case 'saveNew': handleSaveNewBook(); return;
-      case 'save': console.log('Modify current book!'); return;
+      case 'save': handleSaveBook(); return;
       case 'delete': handleDeleteBook(); return;
       default: return;
     }
@@ -95,6 +95,46 @@ function App() {
       }
     }
     postBook();
+  }
+
+  function handleSaveBook() {
+    const bookToBeModified = activeBook;
+    const errorFields = [];
+
+    if (bookToBeModified.title == '') {
+      errorFields.push('title');
+    }
+    if (bookToBeModified.author == '') {
+      errorFields.push('author');
+    }
+    if (bookToBeModified.description == '') {
+      errorFields.push('description');
+    }
+    if (errorFields.length > 0) {
+      setIsError(true);
+      setErrorMsg(`Error: fields: [${errorFields.join(", ")}] are required!`);
+      return;
+    }
+
+    const requestOptions = {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(activeBook)
+    };
+
+    const patchBook = async () => {
+      try {
+        const res = await fetch(`/api/books/${bookToBeModified.id}`, requestOptions);
+        if (!res.ok) {
+          throw new Error(`(${res.status}) ${res.statusText}`);
+        }
+        setBooks(books.filter( book => book.id != bookToBeModified.id).concat(bookToBeModified))
+      } catch (err) {
+        setIsError(true);
+        setErrorMsg(String(err));
+      }
+    }
+    patchBook();
   }
 
   function handleDeleteBook() {

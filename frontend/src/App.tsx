@@ -171,7 +171,7 @@ function App() {
       <div className={`flex w-[80vw] mt-7 border-2 rounded-lg transition-opacity duration-300 delay-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
         <div className='min-w-[30vw] basis-1 border-r-2 p-2'>
           {books.map(book => (
-            <div key={book.id} className="flex flex-col border-b-2 hover:bg-gray-100 cursor-pointer" onClick={() => setActiveBook(book)}>
+            <div key={book.id} className={`flex flex-col border-b-2 hover:bg-gray-200 cursor-pointer ${book.id == activeBook.id ? "bg-gray-100" : ""}`} onClick={() => setActiveBook(book)}>
               <div className='flex justify-between'>
                 <div className='font-bold'>{book.title}</div>
                 <div>{book.author}</div>

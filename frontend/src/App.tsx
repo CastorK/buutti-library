@@ -88,7 +88,9 @@ function App() {
           throw new Error(`(${res.status}) ${res.statusText}`);
         }
         const newBook: Book = await res.json();
-        setBooks(books.concat(newBook))
+        setBooks(books.concat(newBook));
+        setActiveBook(newBook);
+        setBookIsModified(false);
       } catch (err) {
         setIsError(true);
         setErrorMsg(String(err));
@@ -129,6 +131,7 @@ function App() {
           throw new Error(`(${res.status}) ${res.statusText}`);
         }
         setBooks(books.filter( book => book.id != bookToBeModified.id).concat(bookToBeModified))
+        setBookIsModified(false);
       } catch (err) {
         setIsError(true);
         setErrorMsg(String(err));
@@ -147,6 +150,7 @@ function App() {
         }
         setBooks(books.filter( book => book.id != bookToBeRemoved.id))
         setActiveBook({id: -1, title: '', author: '', description: ''});
+        setBookIsModified(false);
       } catch (err) {
         setIsError(true);
         setErrorMsg(String(err));

@@ -11,6 +11,7 @@ interface Book {
 function App() {
   const [books, setBooks] = useState<Book[]>([]);
   const [activeBook, setActiveBook] = useState<Book>({id: -1, title: '', author: '', description: ''});
+  const [bookIsModified, setBookIsModified] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -36,21 +37,64 @@ function App() {
   }, [])
 
   const handleBookFieldChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
-    setActiveBook((prevState) => ({
-      ...prevState,
-      [e.target.name]: e.target.value,
-    }));
+    const newActiveBook = {
+      ...activeBook,
+      [e.target.name]: e.target.value
+    }
+    setActiveBook(newActiveBook);
+    setBookIsModified(Boolean(newActiveBook.title && newActiveBook.author && newActiveBook.description));
   };
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!(event.nativeEvent instanceof SubmitEvent)) return;
     switch (event.nativeEvent.submitter?.id) {
-      case 'saveNew': console.log('Save new book!'); return;
+      case 'saveNew': handleSaveNewBook(); return;
       case 'save': console.log('Modify current book!'); return;
       case 'delete': console.log('Delete current book!'); return;
       default: return;
     }
+  }
+
+  function handleSaveNewBook() {
+    const { ['id']: id, ...postData} = activeBook;
+    const errorFields = [];
+
+    if (postData.title == '') {
+      errorFields.push('title');
+    }
+    if (postData.author == '') {
+      errorFields.push('author');
+    }
+    if (postData.description == '') {
+      errorFields.push('description');
+    }
+    if (errorFields.length > 0) {
+      setIsError(true);
+      setErrorMsg(`Error: fields: [${errorFields.join(", ")}] are required!`);
+      return;
+    }
+
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postData)
+    };
+
+    const postBook = async () => {
+      try {
+        const res = await fetch('/api/books', requestOptions);
+        if (!res.ok) {
+          throw new Error(`(${res.status}) ${res.statusText}`);
+        }
+        const newBook: Book = await res.json();
+        setBooks(books.concat(newBook))
+      } catch (err) {
+        setIsError(true);
+        setErrorMsg(String(err));
+      }
+    }
+    postBook();
   }
 
   return (
@@ -89,8 +133,8 @@ function App() {
               <textarea className="border-2 grow rounded-lg p-1" rows={15} id="description" name="description" placeholder='Description of the book' value={activeBook.description} onChange={handleBookFieldChange}></textarea>
             </div>
             <div className='flex gap-4 justify-center pt-8'>
-              <button type='submit' id="saveNew" className='bg-blue-700 py-2 px-4 rounded-lg border-2 border-blue-800 text-white enabled:hover:bg-blue-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0}>Save New</button>
-              <button type='submit' id="save" className='bg-green-700 py-2 px-4 rounded-lg border-2 border-green-800 text-white enabled:hover:bg-green-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0}>Save</button>
+              <button type='submit' id="saveNew" className='bg-blue-700 py-2 px-4 rounded-lg border-2 border-blue-800 text-white enabled:hover:bg-blue-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={!bookIsModified}>Save New</button>
+              <button type='submit' id="save" className='bg-green-700 py-2 px-4 rounded-lg border-2 border-green-800 text-white enabled:hover:bg-green-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0 && !bookIsModified}>Save</button>
               <button type='submit' id="delete" className='bg-red-700 py-2 px-4 rounded-lg border-2 border-red-800 text-white enabled:hover:bg-red-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0}>Delete</button>
             </div>
           </form>

@@ -94,6 +94,23 @@ app.post<BookData, Book | {error: string}>('/books', async (req, res) => {
   res.status(200).json(insertedBook);
 });
 
+/**********
+ * DELETE *
+ **********/
+app.delete<{id: number}, void>('/books/:id', async (req,res) => {
+  const { id } = req.params;
+  const bookCollection = await db.getObject<BookCollection>("/books");
+  const bookExists: boolean = Object.values(bookCollection).some(book => book.id == id);
+  
+  if (!bookExists) {
+    res.status(404).send();
+    return;
+  }
+
+  db.delete(`/books/${id}`);
+  res.status(204).send();
+})
+
 app.listen(PORT, () => {
   console.log(`Backend started on localhost:${PORT}`);
 });

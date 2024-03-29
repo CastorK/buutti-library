@@ -1,4 +1,4 @@
-import { JsonDB, Config } from 'node-json-db';
+import { JsonDB, Config, DataError } from 'node-json-db';
 
 import express from 'express';
 import cors from 'cors';
@@ -91,7 +91,7 @@ app.post<BookData, Book | {error: string}>('/books', async (req, res) => {
   const newBook = { [newId]: { id: newId, ...bookData } };
   await db.push('/books', newBook, false);
   const insertedBook = await db.getObject<Book>(`/books/${newId}`);
-  res.status(200).json(insertedBook);
+  res.status(201).json(insertedBook);
 });
 
 /**********
@@ -109,6 +109,26 @@ app.delete<{id: number}, void>('/books/:id', async (req,res) => {
 
   db.delete(`/books/${id}`);
   res.status(204).send();
+})
+
+/*********
+ * PATCH *
+ *********/
+app.patch('/books/:id', async (req, res) => {
+  const { id } = req.params;
+  const updatedBookData = req.body;
+  try {
+    const book = await db.getObject<BookCollection>(`/books/${id}`);
+    db.push(`/books/${id}`, updatedBookData, false)
+    res.status(200).send();
+  } catch (e) {
+    if (e instanceof DataError) {
+      res.status(404).send();
+    } 
+    else {
+      res.status(500).send();
+    }
+  }
 })
 
 app.listen(PORT, () => {

@@ -51,7 +51,7 @@ function App() {
     switch (event.nativeEvent.submitter?.id) {
       case 'saveNew': handleSaveNewBook(); return;
       case 'save': console.log('Modify current book!'); return;
-      case 'delete': console.log('Delete current book!'); return;
+      case 'delete': handleDeleteBook(); return;
       default: return;
     }
   }
@@ -97,6 +97,24 @@ function App() {
     postBook();
   }
 
+  function handleDeleteBook() {
+    const deleteBook = async () => {
+      const bookToBeRemoved = activeBook;
+      try {
+        const res = await fetch(`/api/books/${bookToBeRemoved.id}`, { method: 'DELETE' });
+        if (!res.ok) {
+          throw new Error(`(${res.status}) ${res.statusText}`);
+        }
+        setBooks(books.filter( book => book.id != bookToBeRemoved.id))
+        setActiveBook({id: -1, title: '', author: '', description: ''});
+      } catch (err) {
+        setIsError(true);
+        setErrorMsg(String(err));
+      }
+    }
+    deleteBook();
+  }
+
   return (
     <div className='flex flex-col items-center'>
       <h1 className='text-5xl font-bold pt-20 pb-7'>Welcome to Castor's library!</h1>
@@ -134,7 +152,7 @@ function App() {
             </div>
             <div className='flex gap-4 justify-center pt-8'>
               <button type='submit' id="saveNew" className='bg-blue-700 py-2 px-4 rounded-lg border-2 border-blue-800 text-white enabled:hover:bg-blue-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={!bookIsModified}>Save New</button>
-              <button type='submit' id="save" className='bg-green-700 py-2 px-4 rounded-lg border-2 border-green-800 text-white enabled:hover:bg-green-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0 && !bookIsModified}>Save</button>
+              <button type='submit' id="save" className='bg-green-700 py-2 px-4 rounded-lg border-2 border-green-800 text-white enabled:hover:bg-green-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0 || !bookIsModified}>Save</button>
               <button type='submit' id="delete" className='bg-red-700 py-2 px-4 rounded-lg border-2 border-red-800 text-white enabled:hover:bg-red-800 disabled:bg-gray-400 disabled:text-black disabled:opacity-70' disabled={activeBook.id < 0}>Delete</button>
             </div>
           </form>

@@ -143,8 +143,16 @@ app.patch('/books/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const updatedBookData = req.body;
-    const book = await db.getObject<BookCollection>(`/books/${id}`);
-    db.push(`/books/${id}`, updatedBookData, false)
+    const bookToBePatched = await db.getObject<Book>(`/books/${id}`);
+    const bookCollection = await db.getObject<BookCollection>("/books");
+  
+    const isDuplicate: boolean = Object.values(bookCollection).some(book => book.title == updatedBookData.title && book.author == updatedBookData.author);
+    if (isDuplicate) {
+      res.status(400).json({error: "Duplicate book with same title and author exists!"}).send();
+      return;
+    }
+
+    db.push(`/books/${id}`, updatedBookData, false);
     res.status(200).send();
   } catch (err) {
     if (err instanceof DataError) {

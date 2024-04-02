@@ -79,4 +79,20 @@ async function saveBook(modifiedBook: Book): Promise<Book> {
   return modifiedBook;
 }
 
-export { saveNewBook, saveBook };
+
+/**
+ * Description placeholder
+ *
+ * @async
+ * @param {Book} bookToBeRemoved - The book that should be deleted
+ * @returns {Promise<void>}
+ * @throws {Error} Will throw Error if the request fails
+ */
+async function deleteBook(bookToBeRemoved: Book): Promise<void> {
+  const res = await fetch(`/api/books/${bookToBeRemoved.id}`, { method: 'DELETE' });
+  if (!res.ok) {
+    throw new Error(`(${res.status}) ${res.statusText}`);
+  }
+}
+
+export { saveNewBook, saveBook, deleteBook };

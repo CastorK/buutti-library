@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import Spinner from './Spinner';
-import { saveBook, saveNewBook } from './api-helpers';
+import { deleteBook, saveBook, saveNewBook } from './api-helpers';
 
 export interface Book {
   id: number;
@@ -70,7 +70,7 @@ function App() {
         setErrorMsg(String(err));
       }
     }
-    
+
     saveNewBookAsync();
   }
 
@@ -91,14 +91,10 @@ function App() {
   }
 
   function handleDeleteBook() {
-    const deleteBook = async () => {
-      const bookToBeRemoved = activeBook;
+    const deleteBookAsync = async () => {
       try {
-        const res = await fetch(`/api/books/${bookToBeRemoved.id}`, { method: 'DELETE' });
-        if (!res.ok) {
-          throw new Error(`(${res.status}) ${res.statusText}`);
-        }
-        setBooks(books.filter( book => book.id != bookToBeRemoved.id))
+        await deleteBook(activeBook);
+        setBooks(books.filter(book => book.id != activeBook.id))
         setActiveBook({id: -1, title: '', author: '', description: ''});
         setBookIsModified(false);
       } catch (err) {
@@ -106,7 +102,8 @@ function App() {
         setErrorMsg(String(err));
       }
     }
-    deleteBook();
+
+    deleteBookAsync();
   }
 
   return (

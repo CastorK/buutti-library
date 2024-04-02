@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import Spinner from './Spinner';
-import { saveNewBook } from './api-helpers';
+import { saveBook, saveNewBook } from './api-helpers';
 
 export interface Book {
   id: number;
@@ -50,68 +50,44 @@ function App() {
     event.preventDefault();
     if (!(event.nativeEvent instanceof SubmitEvent)) return;
 
-    try {
-      switch (event.nativeEvent.submitter?.id) {
-        case 'saveNew': handleSaveNewBook(); return;
-        case 'save': handleSaveBook(); return;
-        case 'delete': handleDeleteBook(); return;
-        default: return;
-      }
-    } catch (err) {
-      setIsError(true);
-      setErrorMsg(String(err));
+    switch (event.nativeEvent.submitter?.id) {
+      case 'saveNew': handleSaveNewBook(); return;
+      case 'save': handleSaveBook(); return;
+      case 'delete': handleDeleteBook(); return;
+      default: return;
     }
   }
 
   function handleSaveNewBook() {
-    const saveBook = async () => {
-      const newBook = await saveNewBook(activeBook);
-      setBooks(books.concat(newBook));
-      setActiveBook(newBook);
-      setBookIsModified(false);
-    }
-    saveBook();
-  }
-
-  function handleSaveBook() {
-    const bookToBeModified = activeBook;
-    const errorFields = [];
-
-    if (bookToBeModified.title == '') {
-      errorFields.push('title');
-    }
-    if (bookToBeModified.author == '') {
-      errorFields.push('author');
-    }
-    if (bookToBeModified.description == '') {
-      errorFields.push('description');
-    }
-    if (errorFields.length > 0) {
-      setIsError(true);
-      setErrorMsg(`Error: fields: [${errorFields.join(", ")}] are required!`);
-      return;
-    }
-
-    const requestOptions = {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(activeBook)
-    };
-
-    const patchBook = async () => {
+    const saveNewBookAsync = async () => {
       try {
-        const res = await fetch(`/api/books/${bookToBeModified.id}`, requestOptions);
-        if (!res.ok) {
-          throw new Error(`(${res.status}) ${res.statusText}`);
-        }
-        setBooks(books.filter( book => book.id != bookToBeModified.id).concat(bookToBeModified))
+        const newBook = await saveNewBook(activeBook);
+        setBooks(books.concat(newBook));
+        setActiveBook(newBook);
         setBookIsModified(false);
       } catch (err) {
         setIsError(true);
         setErrorMsg(String(err));
       }
     }
-    patchBook();
+    
+    saveNewBookAsync();
+  }
+
+  function handleSaveBook() {
+    const saveBookAsync = async () => {
+      try {
+        const updatedBook = await saveBook(activeBook);
+        setBooks(books.filter( book => book.id != updatedBook.id).concat(updatedBook))
+        setActiveBook(updatedBook);
+        setBookIsModified(false);
+      } catch (err) {
+        setIsError(true);
+        setErrorMsg(String(err));
+      }
+    }
+
+    saveBookAsync();
   }
 
   function handleDeleteBook() {

@@ -84,6 +84,9 @@ app.get<{id: number}, Book>('/books/:id', async (req, res) => {
     const data = await db.getObject<Book>(`/books/${id}`);
     res.status(200).json(data).send();
   } catch (err) {
+    if (err instanceof DataError) {
+      res.status(404).send();
+    }
     res.status(500).send();
   }
 });

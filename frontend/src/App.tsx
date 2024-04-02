@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import Spinner from './Spinner';
+import { saveNewBook } from './api-helpers';
 
-interface Book {
+export interface Book {
   id: number;
   title: string;
   author: string;
@@ -48,55 +49,28 @@ function App() {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!(event.nativeEvent instanceof SubmitEvent)) return;
-    switch (event.nativeEvent.submitter?.id) {
-      case 'saveNew': handleSaveNewBook(); return;
-      case 'save': handleSaveBook(); return;
-      case 'delete': handleDeleteBook(); return;
-      default: return;
+
+    try {
+      switch (event.nativeEvent.submitter?.id) {
+        case 'saveNew': handleSaveNewBook(); return;
+        case 'save': handleSaveBook(); return;
+        case 'delete': handleDeleteBook(); return;
+        default: return;
+      }
+    } catch (err) {
+      setIsError(true);
+      setErrorMsg(String(err));
     }
   }
 
   function handleSaveNewBook() {
-    const { ['id']: id, ...postData} = activeBook;
-    const errorFields = [];
-
-    if (postData.title == '') {
-      errorFields.push('title');
+    const saveBook = async () => {
+      const newBook = await saveNewBook(activeBook);
+      setBooks(books.concat(newBook));
+      setActiveBook(newBook);
+      setBookIsModified(false);
     }
-    if (postData.author == '') {
-      errorFields.push('author');
-    }
-    if (postData.description == '') {
-      errorFields.push('description');
-    }
-    if (errorFields.length > 0) {
-      setIsError(true);
-      setErrorMsg(`Error: fields: [${errorFields.join(", ")}] are required!`);
-      return;
-    }
-
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(postData)
-    };
-
-    const postBook = async () => {
-      try {
-        const res = await fetch('/api/books', requestOptions);
-        if (!res.ok) {
-          throw new Error(`(${res.status}) ${res.statusText}`);
-        }
-        const newBook: Book = await res.json();
-        setBooks(books.concat(newBook));
-        setActiveBook(newBook);
-        setBookIsModified(false);
-      } catch (err) {
-        setIsError(true);
-        setErrorMsg(String(err));
-      }
-    }
-    postBook();
+    saveBook();
   }
 
   function handleSaveBook() {

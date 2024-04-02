@@ -58,71 +58,93 @@ function generateUniqueID(existingIDs: number[]): string {
  * GET *
  *******/
 app.get<{}, RootResponse>('/', async (req, res) => {
-  const data = await db.getObject<Data>("/");
-  res.status(200).json({
-    tables: Object.keys(data)
-  });
+  try {
+    const data = await db.getObject<Data>("/");
+    res.status(200).json({
+      tables: Object.keys(data)
+    }).send();
+  } catch (err) {
+    res.status(500).send();
+  }
+  
 });
 
 app.get<{}, BookCollection>('/books', async (req, res) => {
-  const data = await db.getObject<{ [key: string]: Book }>("/books")
-  res.status(200).json(data);
+  try {
+    const data = await db.getObject<{ [key: string]: Book }>("/books")
+    res.status(200).json(data).send();
+  } catch (err) {
+    res.status(500).send();
+  }
 });
 
 app.get<{id: number}, Book>('/books/:id', async (req, res) => {
-  const { id } = req.params;
-  const data = await db.getObject<Book>(`/books/${id}`);
-  res.status(200).json(data);
+  try {
+    const { id } = req.params;
+    const data = await db.getObject<Book>(`/books/${id}`);
+    res.status(200).json(data).send();
+  } catch (err) {
+    res.status(500).send();
+  }
 });
 
 /********
  * POST *
  ********/
 app.post<BookData, Book | {error: string}>('/books', async (req, res) => {
-  const bookData: BookData = req.body;
-  const bookCollection = await db.getObject<BookCollection>("/books");
+  try {
+    const bookData: BookData = req.body;
+    const bookCollection = await db.getObject<BookCollection>("/books");
+  
+    const isDuplicate: boolean = Object.values(bookCollection).some(book => book.title == bookData.title && book.author == bookData.author);
+    if (isDuplicate) {
+      res.status(400).json({error: "Duplicate book with same title and author exists!"}).send();
+      return;
+    }
 
-  const isDuplicate: boolean = Object.values(bookCollection).some(book => book.title == bookData.title && book.author == bookData.author);
-  if (isDuplicate) {
-    res.status(400).json({error: "Duplicate book with same title and author exists!"});
-    return;
+    const newId = generateUniqueID(Object.keys(bookCollection).map(stringID => Number(stringID)));
+    const newBook = { [newId]: { id: newId, ...bookData } };
+    await db.push('/books', newBook, false);
+    const insertedBook = await db.getObject<Book>(`/books/${newId}`);
+    res.status(201).json(insertedBook).send();
+  } catch (err) {
+    res.status(500).send();
   }
-  const newId = generateUniqueID(Object.keys(bookCollection).map(stringID => Number(stringID)));
-  const newBook = { [newId]: { id: newId, ...bookData } };
-  await db.push('/books', newBook, false);
-  const insertedBook = await db.getObject<Book>(`/books/${newId}`);
-  res.status(201).json(insertedBook);
 });
 
 /**********
  * DELETE *
  **********/
 app.delete<{id: number}, void>('/books/:id', async (req,res) => {
-  const { id } = req.params;
-  const bookCollection = await db.getObject<BookCollection>("/books");
-  const bookExists: boolean = Object.values(bookCollection).some(book => book.id == id);
-  
-  if (!bookExists) {
-    res.status(404).send();
-    return;
-  }
+  try {
+    const { id } = req.params;
+    const bookCollection = await db.getObject<BookCollection>("/books");
+    const bookExists: boolean = Object.values(bookCollection).some(book => book.id == id);
+    
+    if (!bookExists) {
+      res.status(404).send();
+      return;
+    }
 
-  db.delete(`/books/${id}`);
-  res.status(204).send();
+    db.delete(`/books/${id}`);
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).send();
+  }
 })
 
 /*********
  * PATCH *
  *********/
 app.patch('/books/:id', async (req, res) => {
-  const { id } = req.params;
-  const updatedBookData = req.body;
   try {
+    const { id } = req.params;
+    const updatedBookData = req.body;
     const book = await db.getObject<BookCollection>(`/books/${id}`);
     db.push(`/books/${id}`, updatedBookData, false)
     res.status(200).send();
-  } catch (e) {
-    if (e instanceof DataError) {
+  } catch (err) {
+    if (err instanceof DataError) {
       res.status(404).send();
     } 
     else {
